@@ -1,2 +1,227 @@
-# Script-t-ng-h-p
-Tổng hợp lại các script của roblox
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "ScriptMenuGui"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "ToggleButton"
+toggleButton.Size = UDim2.new(0, 60, 0, 60)
+toggleButton.Position = UDim2.new(0, 10, 0.5, -30)
+toggleButton.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+toggleButton.Text = "☰"
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.TextScaled = true
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.Parent = screenGui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(0, 30)
+toggleCorner.Parent = toggleButton
+
+local dragging = false
+local dragStart = nil
+local startPos = nil
+local dragConnection = nil
+local clickTimer = 0
+
+local menuOpen = false
+local menuFrame = Instance.new("Frame")
+menuFrame.Name = "MenuFrame"
+menuFrame.Size = UDim2.new(0.8, 0, 0.7, 0)
+menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+menuFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+menuFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+menuFrame.BackgroundTransparency = 0.1
+menuFrame.BorderSizePixel = 0
+menuFrame.Visible = false
+menuFrame.Parent = screenGui
+
+local frameCorner = Instance.new("UICorner")
+frameCorner.CornerRadius = UDim.new(0, 15)
+frameCorner.Parent = menuFrame
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Size = UDim2.new(1, 0, 0.1, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "Danh Sách Script"
+titleLabel.TextColor3 = Color3.new(1, 1, 1)
+titleLabel.TextScaled = true
+titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.Parent = menuFrame
+
+local scrollingFrame = Instance.new("ScrollingFrame")
+scrollingFrame.Size = UDim2.new(0.9, 0, 0.85, 0)
+scrollingFrame.Position = UDim2.new(0.05, 0, 0.12, 0)
+scrollingFrame.BackgroundTransparency = 1
+scrollingFrame.ScrollBarThickness = 8
+scrollingFrame.Parent = menuFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 8)
+listLayout.Parent = scrollingFrame
+
+local scriptList = {
+    {
+        Name = "script fake thông báo blox fruit",
+        Description = "fake thông báo nhặt trái blox fruit",
+        ScriptId = [[local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "NotificationDemo"
+screenGui.Parent = game.Players.LocalPlayer.PlayerGui
+
+local button = Instance.new("TextButton")
+button.Size = UDim2.new(0, 50, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0.5, -25)
+button.Text = "nhìn con cặc"
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
+button.Font = Enum.Font.SourceSansBold
+button.TextSize = 20
+button.Parent = screenGui
+
+local notification = Instance.new("TextLabel")
+notification.Size = UDim2.new(0, 800, 0, 80)
+notification.Position = UDim2.new(0.5, 0, 0.2, 0)
+notification.AnchorPoint = Vector2.new(0.5, 0.5)
+notification.BackgroundTransparency = 1
+notification.Text = "<font color=\"rgb(0, 255, 0)\">Bạn đã tìm được một trái Blox!</font><font color=\"rgb(255, 0, 0)\">! Hãy cẩn thận, nếu bạn chết trước khi</font>\n<font color=\"rgb(255, 0, 0)\">nó sẽ biến mất khỏi ba-lô nếu bạn ăn nó!</font>"
+notification.TextColor3 = Color3.fromRGB(255, 255, 255)
+notification.TextStrokeTransparency = 0
+notification.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+notification.Font = Enum.Font.Code
+notification.TextSize = 30
+notification.RichText = true
+notification.TextWrapped = true
+notification.Visible = false
+notification.Parent = screenGui
+
+local function showNotification()
+    notification.Visible = true
+    notification.TextTransparency = 1
+    notification.TextStrokeTransparency = 1
+    
+    local tweenService = game:GetService("TweenService")
+    local tweenIn = tweenService:Create(notification, TweenInfo.new(0.5), {TextTransparency = 0, TextStrokeTransparency = 0})
+    tweenIn:Play()
+    
+    task.wait(5)  
+    
+    local tweenOut = tweenService:Create(notification, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1})
+    tweenOut:Play()
+    
+    tweenOut.Completed:Wait()
+    notification.Visible = false
+end
+
+button.MouseButton1Click:Connect(showNotification)]]
+    },
+}
+
+for _, scriptData in ipairs(scriptList) do
+    local button = Instance.new("TextButton")
+    button.Size = UDim2.new(1, -10, 0, 60)
+    button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    button.Text = scriptData.Name .. ": " .. scriptData.Description
+    button.TextColor3 = Color3.new(1, 1, 1)
+    button.TextScaled = true
+    button.Parent = scrollingFrame
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = button
+    
+    button.Activated:Connect(function()
+        print("Chạy script: " .. scriptData.Name)
+        if scriptData.ScriptId then
+            loadstring(scriptData.ScriptId)()
+        end
+    end)
+end
+
+scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #scriptList * 70)
+
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0.08, 0, 0.08, 0)
+closeButton.Position = UDim2.new(0.92, 0, 0, 5)
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
+closeButton.Text = "✕"
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.TextScaled = true
+closeButton.Parent = menuFrame
+
+local closeCorner = Instance.new("UICorner")
+closeCorner.CornerRadius = UDim.new(0, 20)
+closeCorner.Parent = closeButton
+
+local tweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+
+local function toggleMenu()
+    menuOpen = not menuOpen
+    print("Toggle menu: " .. tostring(menuOpen))
+    if menuOpen then
+        menuFrame.Visible = true
+        toggleButton.Text = "✕"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+        menuFrame.Position = UDim2.new(1.2, 0, 0.5, 0)
+        local openTween = TweenService:Create(menuFrame, tweenInfo, {Position = UDim2.new(0.5, 0, 0.5, 0)})
+        openTween:Play()
+    else
+        toggleButton.Text = "☰"
+        toggleButton.BackgroundColor3 = Color3.fromRGB(0, 162, 255)
+        local closeTween = TweenService:Create(menuFrame, tweenInfo, {Position = UDim2.new(-0.7, 0, 0.5, 0)})
+        closeTween:Play()
+        closeTween.Completed:Connect(function()
+            menuFrame.Visible = false
+            menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+        end)
+    end
+end
+
+local function onInputBegan(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        clickTimer = tick()
+        dragStart = Vector2.new(input.Position.X, input.Position.Y)
+        startPos = toggleButton.Position
+        dragging = false
+        
+        dragConnection = UserInputService.InputChanged:Connect(function(inputChanged)
+            if inputChanged.UserInputType == Enum.UserInputType.MouseMovement or inputChanged.UserInputType == Enum.UserInputType.Touch then
+                local deltaTime = tick() - clickTimer
+                if deltaTime > 0.1 then
+                    dragging = true
+                    local delta = Vector2.new(inputChanged.Position.X, inputChanged.Position.Y) - dragStart
+                    local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                    toggleButton.Position = newPos
+                end
+            end
+        end)
+    end
+end
+
+local function onInputEnded(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        local deltaTime = tick() - clickTimer
+        if dragConnection then
+            dragConnection:Disconnect()
+        end
+        if deltaTime <= 0.1 and not dragging then
+            print("Click detected, toggling menu")
+            toggleMenu()
+        end
+        dragging = false
+    end
+end
+
+toggleButton.InputBegan:Connect(onInputBegan)
+UserInputService.InputEnded:Connect(onInputEnded)
+
+closeButton.Activated:Connect(toggleMenu)
+
+print("Script loaded. Bấm nút ☰ để test toggle (kiểm tra console).")
