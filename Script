@@ -57,9 +57,24 @@ titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.SourceSansBold
 titleLabel.Parent = menuFrame
 
+local searchBox = Instance.new("TextBox")
+searchBox.Size = UDim2.new(0.9, 0, 0.05, 0)
+searchBox.Position = UDim2.new(0.05, 0, 0.12, 0)
+searchBox.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+searchBox.Text = ""
+searchBox.PlaceholderText = "Nhập tên trò chơi..."
+searchBox.TextColor3 = Color3.new(1, 1, 1)
+searchBox.TextScaled = true
+searchBox.Font = Enum.Font.SourceSans
+searchBox.Parent = menuFrame
+
+local searchCorner = Instance.new("UICorner")
+searchCorner.CornerRadius = UDim.new(0, 8)
+searchCorner.Parent = searchBox
+
 local scrollingFrame = Instance.new("ScrollingFrame")
-scrollingFrame.Size = UDim2.new(0.9, 0, 0.85, 0)
-scrollingFrame.Position = UDim2.new(0.05, 0, 0.12, 0)
+scrollingFrame.Size = UDim2.new(0.9, 0, 0.78, 0)
+scrollingFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
 scrollingFrame.BackgroundTransparency = 1
 scrollingFrame.ScrollBarThickness = 8
 scrollingFrame.Parent = menuFrame
@@ -72,6 +87,7 @@ local scriptList = {
     {
         Name = "script fake thông báo blox fruit",
         Description = "fake thông báo nhặt trái blox fruit",
+        Game = "Blox Fruits",
         ScriptId = [[local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "NotificationDemo"
 screenGui.Parent = game.Players.LocalPlayer.PlayerGui
@@ -122,30 +138,105 @@ end
 
 button.MouseButton1Click:Connect(showNotification)]]
     },
+    {
+        Name = "Auto Farm",
+        Description = "Tự động farm tài nguyên",
+        Game = "Brookhaven RP",
+        ScriptId = "print('Auto Farm activated for Brookhaven RP!')"
+    },
+    {
+        Name = "Speed Boost",
+        Description = "Tăng tốc độ di chuyển",
+        Game = "Jailbreak",
+        ScriptId = "game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 50"
+    },
+    {
+        Name = "Infinite Ammo",
+        Description = "Đạn không giới hạn",
+        Game = "Arsenal",
+        ScriptId = "print('Infinite Ammo for Arsenal!')"
+    },
+    {
+        Name = "Pet Unlock",
+        Description = "Mở khóa pet nhanh",
+        Game = "Pet Simulator X",
+        ScriptId = "print('Pet Unlock for Pet Simulator X!')"
+    },
+    {
+        Name = "Adopt All",
+        Description = "Áp dụng tất cả pet",
+        Game = "Adopt Me",
+        ScriptId = "print('Adopt All for Adopt Me!')"
+    },
+    {
+        Name = "No Clip",
+        Description = "Đi xuyên tường",
+        Game = "Doors",
+        ScriptId = "print('No Clip for Doors!')"
+    },
+    {
+        Name = "Aimbot",
+        Description = "Tự động ngắm bắn",
+        Game = "Phantom Forces",
+        ScriptId = "print('Aimbot for Phantom Forces!')"
+    },
 }
 
-for _, scriptData in ipairs(scriptList) do
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(1, -10, 0, 60)
-    button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    button.Text = scriptData.Name .. ": " .. scriptData.Description
-    button.TextColor3 = Color3.new(1, 1, 1)
-    button.TextScaled = true
-    button.Parent = scrollingFrame
-    
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 8)
-    corner.Parent = button
-    
-    button.Activated:Connect(function()
-        print("Chạy script: " .. scriptData.Name)
-        if scriptData.ScriptId then
-            loadstring(scriptData.ScriptId)()
+local function updateScriptList()
+    for _, child in ipairs(scrollingFrame:GetChildren()) do
+        if child:IsA("GuiObject") then
+            child:Destroy()
         end
-    end)
+    end
+    
+    local searchText = searchBox.Text:lower()
+    local filteredScripts = {}
+    
+    if searchText == "" then
+        filteredScripts = scriptList
+    else
+        for _, scriptData in ipairs(scriptList) do
+            if string.find(scriptData.Game:lower(), searchText, 1, true) then
+                table.insert(filteredScripts, scriptData)
+            end
+        end
+    end
+    
+    for _, scriptData in ipairs(filteredScripts) do
+        local gameLabel = Instance.new("TextLabel")
+        gameLabel.Size = UDim2.new(1, -10, 0, 20)
+        gameLabel.BackgroundTransparency = 1
+        gameLabel.Text = "Game: " .. scriptData.Game
+        gameLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+        gameLabel.TextScaled = true
+        gameLabel.Font = Enum.Font.SourceSansItalic
+        gameLabel.Parent = scrollingFrame
+
+        local button = Instance.new("TextButton")
+        button.Size = UDim2.new(1, -10, 0, 60)
+        button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        button.Text = scriptData.Name .. ": " .. scriptData.Description
+        button.TextColor3 = Color3.new(1, 1, 1)
+        button.TextScaled = true
+        button.Parent = scrollingFrame
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = button
+        
+        button.Activated:Connect(function()
+            print("Chạy script: " .. scriptData.Name .. " cho game: " .. scriptData.Game)
+            if scriptData.ScriptId then
+                loadstring(scriptData.ScriptId)()
+            end
+        end)
+    end
+    
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #filteredScripts * 90)
 end
 
-scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #scriptList * 70)
+searchBox:GetPropertyChangedSignal("Text"):Connect(updateScriptList)
+updateScriptList()
 
 local closeButton = Instance.new("TextButton")
 closeButton.Size = UDim2.new(0.08, 0, 0.08, 0)
