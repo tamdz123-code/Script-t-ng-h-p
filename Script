@@ -30,6 +30,7 @@ local dragging = false
 local dragStart = nil
 local startPos = nil
 local dragConnection = nil
+local endConnection = nil
 local clickTimer = 0
 
 local menuOpen = false
@@ -293,25 +294,27 @@ local function onInputBegan(input)
                 end
             end
         end)
-    end
-end
-
-local function onInputEnded(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        local deltaTime = tick() - clickTimer
-        if dragConnection then
-            dragConnection:Disconnect()
-        end
-        if deltaTime <= 0.1 and not dragging then
-            print("Click detected, toggling menu")
-            toggleMenu()
-        end
-        dragging = false
+        
+        endConnection = UserInputService.InputEnded:Connect(function(inputEnded)
+            if inputEnded.UserInputType == Enum.UserInputType.MouseButton1 or inputEnded.UserInputType == Enum.UserInputType.Touch then
+                local deltaTime = tick() - clickTimer
+                if dragConnection then
+                    dragConnection:Disconnect()
+                end
+                if endConnection then
+                    endConnection:Disconnect()
+                end
+                if deltaTime <= 0.1 and not dragging then
+                    print("Click detected, toggling menu")
+                    toggleMenu()
+                end
+                dragging = false
+            end
+        end)
     end
 end
 
 toggleButton.InputBegan:Connect(onInputBegan)
-UserInputService.InputEnded:Connect(onInputEnded)
 
 closeButton.Activated:Connect(toggleMenu)
 
