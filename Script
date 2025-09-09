@@ -29,8 +29,6 @@ toggleCorner.Parent = toggleButton
 local dragging = false
 local dragStart = nil
 local startPos = nil
-local dragConnection = nil
-local endConnection = nil
 local clickTimer = 0
 
 local menuOpen = false
@@ -96,7 +94,7 @@ screenGui.Parent = game.Players.LocalPlayer.PlayerGui
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 50, 0, 50)
 button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Text = "nhìn con cặc"
+button.Text = "Blox"
 button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
 button.Font = Enum.Font.SourceSansBold
@@ -128,7 +126,7 @@ local function showNotification()
     local tweenIn = tweenService:Create(notification, TweenInfo.new(0.5), {TextTransparency = 0, TextStrokeTransparency = 0})
     tweenIn:Play()
     
-    task.wait(5)  
+    task.wait(5)
     
     local tweenOut = tweenService:Create(notification, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1})
     tweenOut:Play()
@@ -137,7 +135,34 @@ local function showNotification()
     notification.Visible = false
 end
 
-button.MouseButton1Click:Connect(showNotification)]]
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+button.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = Vector2.new(input.Position.X, input.Position.Y)
+        startPos = button.Position
+    end
+end)
+
+button.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if dragging then
+            local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
+            button.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end
+end)
+
+button.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+button.Activated:Connect(showNotification)]]
     },
     {
         Name = "Auto Farm",
@@ -203,37 +228,48 @@ local function updateScriptList()
         end
     end
     
-    for _, scriptData in ipairs(filteredScripts) do
-        local gameLabel = Instance.new("TextLabel")
-        gameLabel.Size = UDim2.new(1, -10, 0, 20)
-        gameLabel.BackgroundTransparency = 1
-        gameLabel.Text = "Game: " .. scriptData.Game
-        gameLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
-        gameLabel.TextScaled = true
-        gameLabel.Font = Enum.Font.SourceSansItalic
-        gameLabel.Parent = scrollingFrame
+    if #filteredScripts == 0 then
+        local noResultLabel = Instance.new("TextLabel")
+        noResultLabel.Size = UDim2.new(1, 0, 0, 50)
+        noResultLabel.BackgroundTransparency = 1
+        noResultLabel.Text = "Không tìm thấy script cho trò chơi này"
+        noResultLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
+        noResultLabel.TextScaled = true
+        noResultLabel.Font = Enum.Font.SourceSans
+        noResultLabel.Parent = scrollingFrame
+    else
+        for _, scriptData in ipairs(filteredScripts) do
+            local gameLabel = Instance.new("TextLabel")
+            gameLabel.Size = UDim2.new(1, -10, 0, 20)
+            gameLabel.BackgroundTransparency = 1
+            gameLabel.Text = "Game: " .. scriptData.Game
+            gameLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
+            gameLabel.TextScaled = true
+            gameLabel.Font = Enum.Font.SourceSansItalic
+            gameLabel.Parent = scrollingFrame
 
-        local button = Instance.new("TextButton")
-        button.Size = UDim2.new(1, -10, 0, 60)
-        button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-        button.Text = scriptData.Name .. ": " .. scriptData.Description
-        button.TextColor3 = Color3.new(1, 1, 1)
-        button.TextScaled = true
-        button.Parent = scrollingFrame
-        
-        local corner = Instance.new("UICorner")
-        corner.CornerRadius = UDim.new(0, 8)
-        corner.Parent = button
-        
-        button.Activated:Connect(function()
-            print("Chạy script: " .. scriptData.Name .. " cho game: " .. scriptData.Game)
-            if scriptData.ScriptId then
-                loadstring(scriptData.ScriptId)()
-            end
-        end)
+            local button = Instance.new("TextButton")
+            button.Size = UDim2.new(1, -10, 0, 60)
+            button.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            button.Text = scriptData.Name .. ": " .. scriptData.Description
+            button.TextColor3 = Color3.new(1, 1, 1)
+            button.TextScaled = true
+            button.Parent = scrollingFrame
+            
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 8)
+            corner.Parent = button
+            
+            button.Activated:Connect(function()
+                print("Chạy script: " .. scriptData.Name .. " cho game: " .. scriptData.Game)
+                if scriptData.ScriptId then
+                    loadstring(scriptData.ScriptId)()
+                end
+            end)
+        end
     end
     
-    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, #filteredScripts * 90)
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(50, #filteredScripts * 90))
 end
 
 searchBox:GetPropertyChangedSignal("Text"):Connect(updateScriptList)
@@ -276,45 +312,40 @@ local function toggleMenu()
     end
 end
 
-local function onInputBegan(input)
+local function onInputBegan(input, gameProcessed)
+    if gameProcessed then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        clickTimer = tick()
+        dragging = true
         dragStart = Vector2.new(input.Position.X, input.Position.Y)
         startPos = toggleButton.Position
+        clickTimer = tick()
+    end
+end
+
+local function onInputChanged(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if dragging then
+            local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
+            toggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end
+end
+
+local function onInputEnded(input, gameProcessed)
+    if gameProcessed then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
-        
-        dragConnection = UserInputService.InputChanged:Connect(function(inputChanged)
-            if inputChanged.UserInputType == Enum.UserInputType.MouseMovement or inputChanged.UserInputType == Enum.UserInputType.Touch then
-                local deltaTime = tick() - clickTimer
-                if deltaTime > 0.1 then
-                    dragging = true
-                    local delta = Vector2.new(inputChanged.Position.X, inputChanged.Position.Y) - dragStart
-                    local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-                    toggleButton.Position = newPos
-                end
-            end
-        end)
-        
-        endConnection = UserInputService.InputEnded:Connect(function(inputEnded)
-            if inputEnded.UserInputType == Enum.UserInputType.MouseButton1 or inputEnded.UserInputType == Enum.UserInputType.Touch then
-                local deltaTime = tick() - clickTimer
-                if dragConnection then
-                    dragConnection:Disconnect()
-                end
-                if endConnection then
-                    endConnection:Disconnect()
-                end
-                if deltaTime <= 0.1 and not dragging then
-                    print("Click detected, toggling menu")
-                    toggleMenu()
-                end
-                dragging = false
-            end
-        end)
+        if tick() - clickTimer <= 0.1 then
+            print("Click detected, toggling menu")
+            toggleMenu()
+        end
     end
 end
 
 toggleButton.InputBegan:Connect(onInputBegan)
+toggleButton.InputChanged:Connect(onInputChanged)
+toggleButton.InputEnded:Connect(onInputEnded)
 
 closeButton.Activated:Connect(toggleMenu)
 
