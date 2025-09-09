@@ -10,6 +10,7 @@ screenGui.Name = "ScriptMenuGui"
 screenGui.Parent = playerGui
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local toggleButton = Instance.new("TextButton")
 toggleButton.Name = "ToggleButton"
@@ -20,6 +21,7 @@ toggleButton.Text = "☰"
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
 toggleButton.TextScaled = true
 toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.ZIndex = 100
 toggleButton.Parent = screenGui
 
 local toggleCorner = Instance.new("UICorner")
@@ -41,6 +43,7 @@ menuFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 menuFrame.BackgroundTransparency = 0.1
 menuFrame.BorderSizePixel = 0
 menuFrame.Visible = false
+menuFrame.ZIndex = 100
 menuFrame.Parent = screenGui
 
 local frameCorner = Instance.new("UICorner")
@@ -54,6 +57,7 @@ titleLabel.Text = "Danh Sách Script"
 titleLabel.TextColor3 = Color3.new(1, 1, 1)
 titleLabel.TextScaled = true
 titleLabel.Font = Enum.Font.SourceSansBold
+titleLabel.ZIndex = 101
 titleLabel.Parent = menuFrame
 
 local searchBox = Instance.new("TextBox")
@@ -65,6 +69,7 @@ searchBox.PlaceholderText = "Nhập tên trò chơi..."
 searchBox.TextColor3 = Color3.new(1, 1, 1)
 searchBox.TextScaled = true
 searchBox.Font = Enum.Font.SourceSans
+searchBox.ZIndex = 101
 searchBox.Parent = menuFrame
 
 local searchCorner = Instance.new("UICorner")
@@ -76,6 +81,7 @@ scrollingFrame.Size = UDim2.new(0.9, 0, 0.78, 0)
 scrollingFrame.Position = UDim2.new(0.05, 0, 0.18, 0)
 scrollingFrame.BackgroundTransparency = 1
 scrollingFrame.ScrollBarThickness = 8
+scrollingFrame.ZIndex = 101
 scrollingFrame.Parent = menuFrame
 
 local listLayout = Instance.new("UIListLayout")
@@ -87,7 +93,7 @@ local scriptList = {
         Name = "script fake thông báo blox fruit",
         Description = "fake thông báo nhặt trái blox fruit",
         Game = "Blox Fruits",
-        ScriptId = "loadstring(game:HttpGet("https://raw.githubusercontent.com/tamdz123-code/idk/refs/heads/main/Fake%20tb%20blox%20fruit"))()"
+        ScriptId = "loadstring(game:HttpGet('https://raw.githubusercontent.com/tamdz123-code/idk/refs/heads/main/Fake%20tb%20blox%20fruit'))()"
     },
     {
         Name = "Auto Farm",
@@ -161,6 +167,7 @@ local function updateScriptList()
         noResultLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
         noResultLabel.TextScaled = true
         noResultLabel.Font = Enum.Font.SourceSans
+        noResultLabel.ZIndex = 102
         noResultLabel.Parent = scrollingFrame
     else
         for _, scriptData in ipairs(filteredScripts) do
@@ -171,6 +178,7 @@ local function updateScriptList()
             gameLabel.TextColor3 = Color3.fromRGB(0, 255, 0)
             gameLabel.TextScaled = true
             gameLabel.Font = Enum.Font.SourceSansItalic
+            gameLabel.ZIndex = 102
             gameLabel.Parent = scrollingFrame
 
             local button = Instance.new("TextButton")
@@ -179,6 +187,7 @@ local function updateScriptList()
             button.Text = scriptData.Name .. ": " .. scriptData.Description
             button.TextColor3 = Color3.new(1, 1, 1)
             button.TextScaled = true
+            button.ZIndex = 102
             button.Parent = scrollingFrame
             
             local corner = Instance.new("UICorner")
@@ -187,14 +196,17 @@ local function updateScriptList()
             
             button.Activated:Connect(function()
                 print("Chạy script: " .. scriptData.Name .. " cho game: " .. scriptData.Game)
-                if scriptData.ScriptId then
-                    loadstring(scriptData.ScriptId)()
+                local success, result = pcall(function()
+                    return loadstring(scriptData.ScriptId)()
+                end)
+                if not success then
+                    warn("Lỗi khi chạy script " .. scriptData.Name .. ": " .. tostring(result))
                 end
             end)
         end
     end
     
-    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(50, #filteredScripts * 90))
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, math.max(50, #filteredScripts * 88))
 end
 
 searchBox:GetPropertyChangedSignal("Text"):Connect(updateScriptList)
@@ -207,6 +219,7 @@ closeButton.BackgroundColor3 = Color3.fromRGB(255, 50, 50)
 closeButton.Text = "✕"
 closeButton.TextColor3 = Color3.new(1, 1, 1)
 closeButton.TextScaled = true
+closeButton.ZIndex = 101
 closeButton.Parent = menuFrame
 
 local closeCorner = Instance.new("UICorner")
@@ -232,39 +245,39 @@ local function toggleMenu()
         closeTween:Play()
         closeTween.Completed:Connect(function()
             menuFrame.Visible = false
-            menuFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+            menuFrame.Position = UDim2.new(1.2, 0, 0.5, 0)
         end)
     end
 end
 
 local function onInputBegan(input, gameProcessed)
-    if gameProcessed then return end
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = Vector2.new(input.Position.X, input.Position.Y)
-        startPos = toggleButton.Position
-        clickTimer = tick()
+    if gameProcessed or (input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch) then
+        return
     end
+    dragging = true
+    dragStart = Vector2.new(input.Position.X, input.Position.Y)
+    startPos = toggleButton.Position
+    clickTimer = tick()
 end
 
 local function onInputChanged(input, gameProcessed)
-    if gameProcessed then return end
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        if dragging then
-            local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
-            toggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
+    if gameProcessed or (input.UserInputType ~= Enum.UserInputType.MouseMovement and input.UserInputType ~= Enum.UserInputType.Touch) then
+        return
+    end
+    if dragging then
+        local delta = Vector2.new(input.Position.X, input.Position.Y) - dragStart
+        toggleButton.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end
 
 local function onInputEnded(input, gameProcessed)
-    if gameProcessed then return end
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-        if tick() - clickTimer <= 0.1 then
-            print("Click detected, toggling menu")
-            toggleMenu()
-        end
+    if gameProcessed or (input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch) then
+        return
+    end
+    dragging = false
+    if tick() - clickTimer <= 0.2 then
+        print("Click detected, toggling menu")
+        toggleMenu()
     end
 end
 
@@ -274,4 +287,4 @@ toggleButton.InputEnded:Connect(onInputEnded)
 
 closeButton.Activated:Connect(toggleMenu)
 
-print("Script loaded. Bấm nút ☰ để test toggle (kiểm tra console).")
+print("Script loaded. Bấm nút ☰ để mở/đóng menu hoặc kéo thả nút (kiểm tra console).")
